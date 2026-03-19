@@ -22,7 +22,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Ensure the data returned matches ScanResponse type
     return createSuccessResponse(scanData as ScanResponse, 200);
-
   } catch (error: unknown) {
     console.error('API Error in /api/scan:', error);
     if (error instanceof SyntaxError) {

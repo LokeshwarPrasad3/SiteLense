@@ -1,10 +1,10 @@
-# #!/bin/sh
-# . "$(dirname "$0")/_/husky.sh"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-# echo "====================================="
-# echo "💅 Running Prettier (npm run format)..."
-# echo "====================================="
+echo "====================================="
+echo "💅 Running Prettier (npm run format)..."
+echo "====================================="
 
-# npm run format
+npm run format
 
-# echo "✅ Formatting complete!"
+echo "✅ Formatting complete!"

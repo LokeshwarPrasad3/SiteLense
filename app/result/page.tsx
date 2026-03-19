@@ -8,7 +8,17 @@ import type { ScanResponse } from '@/lib/types/scan.types';
 import { SectionWrapper } from '@/components/landing/section-wrapper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ChevronRight, Globe, Zap, Activity, CheckCircle2, Search, ShieldCheck, ExternalLink } from 'lucide-react';
+import {
+  ArrowRight,
+  ChevronRight,
+  Globe,
+  Zap,
+  Activity,
+  CheckCircle2,
+  Search,
+  ShieldCheck,
+  ExternalLink,
+} from 'lucide-react';
 
 // Import local components
 import Loader from '@/components/results/Loader';
@@ -44,10 +54,12 @@ export default function ResultPage() {
   if (!url || !hostname) {
     return (
       <SectionWrapper className="pt-28 md:pt-40">
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <h1 className="text-3xl font-bold mb-4 text-red-600">Invalid Request</h1>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+          <h1 className="mb-4 text-3xl font-bold text-red-600">Invalid Request</h1>
           <p className="text-lg text-gray-700">No valid URL was provided for scanning.</p>
-          <Button onClick={() => router.push('/')} className="mt-6">Go to Home</Button>
+          <Button onClick={() => router.push('/')} className="mt-6">
+            Go to Home
+          </Button>
         </div>
       </SectionWrapper>
     );
@@ -56,15 +68,15 @@ export default function ResultPage() {
   return (
     <SectionWrapper className="pt-28 md:pt-40">
       {isLoading && (
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center">
           <Loader text="Analyzing your website..." />
         </div>
       )}
 
       {error && (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <h1 className="text-3xl font-bold mb-4 text-red-600">Scan Failed</h1>
-          <p className="text-lg text-gray-700 mb-6 max-w-xl">{error}</p>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <h1 className="mb-4 text-3xl font-bold text-red-600">Scan Failed</h1>
+          <p className="mb-6 max-w-xl text-lg text-gray-700">{error}</p>
           {/* Retry button */}
           <Button onClick={() => executeScan(url)} variant="outline" className="h-12 px-6">
             Try Again
@@ -74,12 +86,17 @@ export default function ResultPage() {
 
       {data && (
         <div className="space-y-12">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 text-center">
+          <h1 className="text-center text-4xl font-extrabold tracking-tight text-gray-900">
             Website Analysis Result for <br />
-            <span className="text-indigo-600 inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 text-indigo-600">
               {hostname}
-              <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${hostname}`}>
-                <ExternalLink className="size-5 text-indigo-500 hover:text-indigo-700 transition-colors" />
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Visit ${hostname}`}
+              >
+                <ExternalLink className="size-5 text-indigo-500 transition-colors hover:text-indigo-700" />
               </a>
             </span>
           </h1>
@@ -94,13 +111,13 @@ export default function ResultPage() {
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ChartCard 
-              title="Performance Score" 
+            <ChartCard
+              title="Performance Score"
               chartType="radialBar"
               series={[data.performance]}
               options={{
                 chart: {
-                  height: 280, 
+                  height: 280,
                   toolbar: { show: false },
                 },
                 plotOptions: {
@@ -113,7 +130,7 @@ export default function ResultPage() {
                           return parseInt(val, 10).toString();
                         },
                         offsetY: 8,
-                        color: '#1F2937', 
+                        color: '#1F2937',
                         fontSize: '24px',
                         fontWeight: 800,
                       },
@@ -126,55 +143,57 @@ export default function ResultPage() {
                       total: {
                         show: true,
                         label: 'Score',
-                        formatter: function (val: {globals: {seriesTotals: number[]}}) {
-                          return val.globals.seriesTotals[0]; 
+                        formatter: function (val: { globals: { seriesTotals: number[] } }) {
+                          return val.globals.seriesTotals[0];
                         },
                         style: {
                           colors: ['#1F2937'],
                           fontSize: '16px',
                           fontWeight: 700,
-                        }
-                      }
-                    }
+                        },
+                      },
+                    },
                   },
                 },
                 fill: {
-                  colors: ['#4F46E5'] // Indigo color
+                  colors: ['#4F46E5'], // Indigo color
                 },
                 stroke: {
-                  lineCap: 'round'
+                  lineCap: 'round',
                 },
                 labels: ['Performance'],
                 grid: {
                   padding: {
-                    top: -30, 
+                    top: -30,
                     bottom: -20,
-                  }
-                }
+                  },
+                },
               }}
             />
-            <ChartCard 
-              title="Key Metrics" 
+            <ChartCard
+              title="Key Metrics"
               chartType="bar"
-              series={[{
-                name: 'Value',
-                data: [
-                  { x: 'LCP', y: parseFloat(data.metrics.lcp.replace('s', '')) * 1000 }, 
-                  { x: 'CLS', y: parseFloat(data.metrics.cls) * 1000 }, 
-                  { x: 'FCP', y: parseFloat(data.metrics.fcp.replace('s', '')) * 1000 }, 
-                  { x: 'TBT', y: parseFloat(data.metrics.tbt.replace('ms', '')) } 
-                ]
-              }]}
+              series={[
+                {
+                  name: 'Value',
+                  data: [
+                    { x: 'LCP', y: parseFloat(data.metrics.lcp.replace('s', '')) * 1000 },
+                    { x: 'CLS', y: parseFloat(data.metrics.cls) * 1000 },
+                    { x: 'FCP', y: parseFloat(data.metrics.fcp.replace('s', '')) * 1000 },
+                    { x: 'TBT', y: parseFloat(data.metrics.tbt.replace('ms', '')) },
+                  ],
+                },
+              ]}
               options={{
                 chart: { id: 'metrics-bar', toolbar: { show: false }, height: 280 },
                 xaxis: { type: 'category' },
-                yaxis: { 
+                yaxis: {
                   title: { text: 'Value (ms)' },
                   labels: {
                     formatter: function (val: number) {
-                      return val >= 1000 ? `${val/1000}s` : `${val}ms`;
-                    }
-                  }
+                      return val >= 1000 ? `${val / 1000}s` : `${val}ms`;
+                    },
+                  },
                 },
                 colors: ['#4F46E5'], // Indigo color
                 plotOptions: {
@@ -189,15 +208,15 @@ export default function ResultPage() {
                 },
                 grid: {
                   borderColor: '#e5e7eb', // Gray-200
-                  row: { colors: ['transparent', 'transparent'], colors: ['#f9fafb'] }, 
+                  row: { colors: ['transparent', 'transparent'], colors: ['#f9fafb'] },
                 },
                 tooltip: {
                   y: {
                     formatter: function (val: number) {
-                      return val >= 1000 ? `${val/1000}s` : `${val}ms`;
-                    }
-                  }
-                }
+                      return val >= 1000 ? `${val / 1000}s` : `${val}ms`;
+                    },
+                  },
+                },
               }}
             />
           </div>
@@ -205,7 +224,7 @@ export default function ResultPage() {
           {/* Metrics and Opportunities Grid */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Key Metrics</h2>
+              <h2 className="mb-4 text-2xl font-bold text-gray-900">Key Metrics</h2>
               <div className="space-y-4">
                 <MetricCard label="LCP" value={data.metrics.lcp} />
                 <MetricCard label="CLS" value={data.metrics.cls} />
@@ -214,11 +233,16 @@ export default function ResultPage() {
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Opportunities</h2>
+              <h2 className="mb-4 text-2xl font-bold text-gray-900">Opportunities</h2>
               {data.opportunities.length > 0 ? (
                 <div className="space-y-4">
                   {data.opportunities.map((opp, index) => (
-                    <OpportunityCard key={index} title={opp.title} description={opp.description} displayValue={opp.displayValue} />
+                    <OpportunityCard
+                      key={index}
+                      title={opp.title}
+                      description={opp.description}
+                      displayValue={opp.displayValue}
+                    />
                   ))}
                 </div>
               ) : (

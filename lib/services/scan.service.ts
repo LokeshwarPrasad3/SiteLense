@@ -22,7 +22,7 @@ const fetchPageSpeedInsights = async (url: string, apiKey?: string): Promise<any
   });
 
   // PageSpeed API requires appending category=X&category=Y, not category=X,Y
-  SCAN_CATEGORIES.forEach(category => {
+  SCAN_CATEGORIES.forEach((category) => {
     params.append('category', category);
   });
 
@@ -35,9 +35,9 @@ const fetchPageSpeedInsights = async (url: string, apiKey?: string): Promise<any
     const response = await axios.get(apiUrl, {
       timeout: API_FETCH_TIMEOUT_MS,
       headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' // Prevent Google blocking headless node
-      }
+        Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', // Prevent Google blocking headless node
+      },
     });
 
     return response.data;
@@ -50,7 +50,10 @@ const fetchPageSpeedInsights = async (url: string, apiKey?: string): Promise<any
 
     if (error.response) {
       const errorData = error.response.data;
-      const message = errorData?.error?.message || errorData?.message || `API request failed with status ${error.response.status}`;
+      const message =
+        errorData?.error?.message ||
+        errorData?.message ||
+        `API request failed with status ${error.response.status}`;
       throw new Error(message);
     }
 
@@ -75,39 +78,60 @@ const mapPageSpeedResult = (psiResult: any): ScanResponse => {
   // Extract scores and convert from 0-1 to 0-100. Added optional chaining to prevent crashes.
   const performance = Math.round((categories.performance?.score || 0) * 100);
   const accessibility = Math.round((categories.accessibility?.score || 0) * 100);
-  const bestPractices = Math.round((categories['best-practices']?.score || categories['best_practices']?.score || 0) * 100);
+  const bestPractices = Math.round(
+    (categories['best-practices']?.score || categories['best_practices']?.score || 0) * 100
+  );
   const seo = Math.round((categories.seo?.score || 0) * 100);
 
   // Extract key metrics from loadingExperience or audits
   const metrics: Metric = {
     // PageSpeed API returns these as strings or numbers, need careful conversion
-    lcp: loadingExperience.metrics.LCP?.displayValue || audits['largest-contentful-paint']?.displayValue || 'N/A',
-    cls: loadingExperience.metrics.CLS?.displayValue || audits['cumulative-layout-shift']?.displayValue || 'N/A',
-    fcp: loadingExperience.metrics.FCP?.displayValue || audits['first-contentful-paint']?.displayValue || 'N/A',
-    tbt: loadingExperience.metrics.TBT?.displayValue || audits['total-blocking-time']?.displayValue || 'N/A',
+    lcp:
+      loadingExperience.metrics.LCP?.displayValue ||
+      audits['largest-contentful-paint']?.displayValue ||
+      'N/A',
+    cls:
+      loadingExperience.metrics.CLS?.displayValue ||
+      audits['cumulative-layout-shift']?.displayValue ||
+      'N/A',
+    fcp:
+      loadingExperience.metrics.FCP?.displayValue ||
+      audits['first-contentful-paint']?.displayValue ||
+      'N/A',
+    tbt:
+      loadingExperience.metrics.TBT?.displayValue ||
+      audits['total-blocking-time']?.displayValue ||
+      'N/A',
   };
 
   // Map opportunities
   const opportunities = Object.values(audits)
-    .filter((audit: any) => audit.score !== null && audit.score < 1 && audit.details?.type === 'opportunity')
-    .map((audit: any): AuditItem => ({
-      title: audit.title,
-      description: audit.description,
-      score: audit.score,
-      displayValue: audit.displayValue,
-    }))
+    .filter(
+      (audit: any) =>
+        audit.score !== null && audit.score < 1 && audit.details?.type === 'opportunity'
+    )
+    .map(
+      (audit: any): AuditItem => ({
+        title: audit.title,
+        description: audit.description,
+        score: audit.score,
+        displayValue: audit.displayValue,
+      })
+    )
     .slice(0, 5);
 
   // Map diagnostics
   const diagnostics = Object.values(audits)
     .filter((audit: any) => audit.details?.type === 'diagnostic')
-    .map((audit: any): AuditItem => ({
-      title: audit.title,
-      description: audit.description,
-      score: audit.score, // Score might be null for diagnostics
-      displayValue: audit.displayValue,
-      numericValue: audit.numericValue,
-    }))
+    .map(
+      (audit: any): AuditItem => ({
+        title: audit.title,
+        description: audit.description,
+        score: audit.score, // Score might be null for diagnostics
+        displayValue: audit.displayValue,
+        numericValue: audit.numericValue,
+      })
+    )
     .slice(0, 5);
 
   return {
@@ -131,7 +155,9 @@ export const performScan = async (request: ScanRequest): Promise<ScanResponse> =
   const apiKey = process.env.PAGESPEED_API_KEY; // Get API key from environment variables
 
   if (!apiKey) {
-    console.warn('PageSpeed Insights API key not found. Running without API key might limit results or fail.');
+    console.warn(
+      'PageSpeed Insights API key not found. Running without API key might limit results or fail.'
+    );
   }
 
   try {
@@ -155,12 +181,28 @@ export const performScan = async (request: ScanRequest): Promise<ScanResponse> =
         tbt: '150 ms',
       },
       opportunities: [
-        { title: 'Serve images in modern formats', description: 'Image formats like WebP provide better compression.', score: 0.6, displayValue: 'Save 1.2 s' },
-        { title: 'Reduce unused JavaScript', description: 'Reduce unused JavaScript and defer loading scripts until necessary.', score: 0.8, displayValue: 'Save 0.5 s' }
+        {
+          title: 'Serve images in modern formats',
+          description: 'Image formats like WebP provide better compression.',
+          score: 0.6,
+          displayValue: 'Save 1.2 s',
+        },
+        {
+          title: 'Reduce unused JavaScript',
+          description: 'Reduce unused JavaScript and defer loading scripts until necessary.',
+          score: 0.8,
+          displayValue: 'Save 0.5 s',
+        },
       ],
       diagnostics: [
-        { title: 'Ensure text remains visible during webfont load', description: 'Leverage the font-display CSS feature to ensure text is user-visible while webfonts are loading.', score: null, displayValue: '1 font found' }
-      ]
+        {
+          title: 'Ensure text remains visible during webfont load',
+          description:
+            'Leverage the font-display CSS feature to ensure text is user-visible while webfonts are loading.',
+          score: null,
+          displayValue: '1 font found',
+        },
+      ],
     };
   }
 };

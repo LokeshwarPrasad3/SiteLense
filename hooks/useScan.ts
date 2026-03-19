@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ScanResponse } from '@/lib/types/scan.types';
 
-type ScanApiError = { message: string; };
+type ScanApiError = { message: string };
 
 export const useScan = () => {
   const [data, setData] = useState<ScanResponse | null>(null);
@@ -38,7 +38,6 @@ export const useScan = () => {
       }
 
       setData(result.data as ScanResponse);
-
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

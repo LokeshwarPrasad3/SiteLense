@@ -18,7 +18,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({ title, score }) => {
   const strokeDashoffset = circumference - (circumference * score) / 100;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white shadow-lg border border-gray-100 hover:shadow-xl hover:border-indigo-200 transition-all duration-300 ease-in-out">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 ease-in-out hover:border-indigo-200 hover:shadow-xl">
       <div className="relative size-40">
         <svg className="size-full -rotate-90" viewBox="0 0 160 160">
           <circle

@@ -1,12 +1,12 @@
-import { Navbar } from "@/components/navbar";
-import { Hero } from "@/components/hero";
-import { About } from "@/components/about";
-import { FeaturesGrid } from "@/components/features-grid";
-import { LiveScanner } from "@/components/live-scanner";
-import { Supporting } from "@/components/supporting";
-import { Pricing } from "@/components/pricing";
-import { FAQ } from "@/components/faq";
-import { CTA } from "@/components/cta";
+import { Navbar } from '@/components/navbar';
+import { Hero } from '@/components/hero';
+import { About } from '@/components/about';
+import { FeaturesGrid } from '@/components/features-grid';
+import { LiveScanner } from '@/components/live-scanner';
+import { Supporting } from '@/components/supporting';
+import { Pricing } from '@/components/pricing';
+import { FAQ } from '@/components/faq';
+import { CTA } from '@/components/cta';
 
 export default function HomePage() {
   return (
@@ -22,14 +22,14 @@ export default function HomePage() {
         <FAQ />
         <CTA />
       </div>
-      
+
       {/* Small Footer to keep it professional */}
-      <footer className="border-t border-gray-100 py-16 bg-white/40 backdrop-blur-md">
+      <footer className="border-t border-gray-100 bg-white/40 py-16 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                <span className="font-black text-xs">SL</span>
+              <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                <span className="text-xs font-black">SL</span>
               </div>
               <span className="text-xl font-black tracking-tight text-gray-900">SiteLens</span>
             </div>
@@ -37,9 +37,15 @@ export default function HomePage() {
               © {new Date().getFullYear()} SiteLens. Built for the modern web.
             </p>
             <div className="flex gap-8 text-sm font-bold text-gray-500">
-              <a href="#" className="hover:text-indigo-600 transition-colors">Twitter</a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">GitHub</a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">Status</a>
+              <a href="#" className="transition-colors hover:text-indigo-600">
+                Twitter
+              </a>
+              <a href="#" className="transition-colors hover:text-indigo-600">
+                GitHub
+              </a>
+              <a href="#" className="transition-colors hover:text-indigo-600">
+                Status
+              </a>
             </div>
           </div>
         </div>

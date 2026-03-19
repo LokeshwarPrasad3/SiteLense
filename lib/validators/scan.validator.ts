@@ -3,9 +3,12 @@ import { z } from 'zod';
 
 // Schema for the incoming request
 export const scanRequestSchema = z.object({
-  url: z.string({
-    required_error: 'URL is required.',
-  }).min(1, 'URL cannot be empty.').url('Please enter a valid URL.'),
+  url: z
+    .string({
+      required_error: 'URL is required.',
+    })
+    .min(1, 'URL cannot be empty.')
+    .url('Please enter a valid URL.'),
 });
 
 // Infer the request type from the schema

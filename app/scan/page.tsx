@@ -42,7 +42,7 @@ export default function ScanPage() {
         <div className="absolute top-[40%] left-[20%] h-[400px] w-[400px] rounded-full bg-blue-50/30 blur-[100px]" />
       </div>
 
-      <div className="flex flex-col items-center justify-center text-center space-y-8">
+      <div className="flex flex-col items-center justify-center space-y-8 text-center">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 sm:text-7xl/tight">
           Scan Your Website's <br />
           <GradientText className="relative inline-block">
@@ -54,27 +54,27 @@ export default function ScanPage() {
           Enter a URL to analyze your website's performance, SEO, accessibility, and best practices.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
+        <form onSubmit={handleSubmit} className="flex w-full max-w-2xl flex-col gap-4 sm:flex-row">
           <Input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Enter website URL (e.g., https://example.com)"
-            className="h-14 px-6 text-lg flex-grow"
+            className="h-14 flex-grow px-6 text-lg"
             required
             disabled={isSubmitting} // Disable input while submitting
           />
           <Button
             type="submit"
             size="lg"
-            className="group h-14 rounded-2xl bg-indigo-600 px-8 text-base font-semibold shadow-2xl shadow-indigo-200/50 hover:bg-indigo-700 active:scale-95 transition-all"
+            className="group h-14 rounded-2xl bg-indigo-600 px-8 text-base font-semibold shadow-2xl shadow-indigo-200/50 transition-all hover:bg-indigo-700 active:scale-95"
             disabled={isSubmitting} // Disable button
           >
             Analyze
             <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
           </Button>
         </form>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       </div>
     </SectionWrapper>
   );

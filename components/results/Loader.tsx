@@ -6,11 +6,11 @@ type LoaderProps = {
 };
 
 const messages = [
-  "Analyzing performance...",
-  "Checking SEO...",
-  "Evaluating best practices...",
-  "Compiling results...",
-  "Almost there!"
+  'Analyzing performance...',
+  'Checking SEO...',
+  'Evaluating best practices...',
+  'Compiling results...',
+  'Almost there!',
 ];
 
 const Loader: React.FC<LoaderProps> = ({ text }) => {
@@ -27,7 +27,7 @@ const Loader: React.FC<LoaderProps> = ({ text }) => {
 
       return () => clearInterval(interval);
     }
-  }, [initialMessage, text]); 
+  }, [initialMessage, text]);
 
   useEffect(() => {
     // Update the displayed message when the index changes
@@ -36,7 +36,7 @@ const Loader: React.FC<LoaderProps> = ({ text }) => {
 
   return (
     <div className="flex flex-col items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 border-solid mb-4"></div>
+      <div className="mb-4 h-16 w-16 animate-spin rounded-full border-t-4 border-solid border-indigo-600"></div>
       <p className="text-lg font-semibold text-gray-700">{currentMessage}</p>
     </div>
   );

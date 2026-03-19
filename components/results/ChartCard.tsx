@@ -14,15 +14,12 @@ type ChartCardProps = {
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, chartType, series, options }) => {
   return (
-    <div className="p-6 rounded-2xl bg-white shadow-lg border border-gray-100">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">{title}</h2>
-      <div className="h-64"> {/* Fixed height for chart container */}
-        <Chart 
-          options={options} 
-          series={series} 
-          type={chartType} 
-          height="100%"
-        />
+    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+      <h2 className="mb-4 text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="h-64">
+        {' '}
+        {/* Fixed height for chart container */}
+        <Chart options={options} series={series} type={chartType} height="100%" />
       </div>
     </div>
   );
