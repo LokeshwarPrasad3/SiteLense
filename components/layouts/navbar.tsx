@@ -12,7 +12,7 @@ export function Navbar() {
           <div className="flex size-10 items-center justify-center rounded-xl transition-transform active:scale-95">
             <Image src="/logo.svg" alt="SiteLens Logo" width={32} height={32} className="size-9" />
           </div>
-          <GradientText className="relative top-0.5 text-xl font-black tracking-tighter">
+          <GradientText className="relative top-0.5 text-xl font-black tracking-wide">
             SiteLens
           </GradientText>
         </Link>
