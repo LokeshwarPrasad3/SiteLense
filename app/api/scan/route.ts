@@ -1,47 +1,153 @@
 // app/api/scan/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { scanRequestSchema } from '@/features/scanner/validators/scan.validator';
-import { performScan } from '@/features/scanner/services/scan.service';
-import { createSuccessResponse } from '@/utils/response';
-import { createErrorResponse } from '@/utils/error';
-import type { ScanResponse } from '@/features/scanner/types/scan.types'; // Import ScanResponse type
 
-export const maxDuration = 120; // Set max duration to 2 minutes
+export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+// 1. In-memory store safely attached to globalThis for dev HMR
+const globalStore = globalThis as unknown as { scanStore: Record<string, any> };
+const scanStore = globalStore.scanStore || (globalStore.scanStore = {});
+
+const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+
+// Background processor
+async function processScanInBackground(scanId: string, url: string) {
   try {
-    const body = await request.json();
-    const validation = scanRequestSchema.safeParse(body);
+    const apiKey = process.env.PAGESPEED_API_KEY;
+    const params = new URLSearchParams({ url, strategy: 'mobile' });
 
-    if (!validation.success) {
-      const errorMessage = validation.error.issues[0]?.message || 'Invalid input.';
-      return createErrorResponse(errorMessage, 400);
+    // Restore all categories (Safe now since it's background processed)
+    const scanCategories = ['performance', 'accessibility', 'best-practices', 'seo'];
+    scanCategories.forEach((category) => params.append('category', category));
+
+    if (apiKey) params.append('key', apiKey);
+
+    const apiUrl = `${PAGESPEED_API_URL}?${params.toString()}`;
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      scanStore[scanId] = {
+        status: 'error',
+        error: errorData?.error?.message || `Google API status ${response.status}`,
+      };
+      return;
     }
 
-    const scanData = await performScan(validation.data);
+    const data = await response.json();
 
-    // Ensure the data returned matches ScanResponse type
-    return createSuccessResponse(scanData as ScanResponse, 200);
+    if (!data.lighthouseResult) {
+      scanStore[scanId] = { status: 'error', error: 'Invalid response from Google API.' };
+      return;
+    }
+
+    const categories = data.lighthouseResult.categories || {};
+    const audits = data.lighthouseResult.audits || {};
+    const loadingExperience = data.loadingExperience?.metrics || {};
+
+    const getAuditValue = (key: string) => audits[key]?.displayValue || 'N/A';
+
+    let fcp = getAuditValue('first-contentful-paint');
+    let lcp = getAuditValue('largest-contentful-paint');
+    let cls = getAuditValue('cumulative-layout-shift');
+    let tbt = getAuditValue('total-blocking-time');
+
+    const hasRealUser = Object.keys(loadingExperience).length > 0;
+    if (hasRealUser) {
+      if (loadingExperience.FIRST_CONTENTFUL_PAINT_MS?.percentile) {
+        fcp = `${(loadingExperience.FIRST_CONTENTFUL_PAINT_MS.percentile / 1000).toFixed(1)} s`;
+      }
+      if (loadingExperience.LARGEST_CONTENTFUL_PAINT_MS?.percentile) {
+        lcp = `${(loadingExperience.LARGEST_CONTENTFUL_PAINT_MS.percentile / 1000).toFixed(1)} s`;
+      }
+      if (loadingExperience.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile) {
+        cls = (loadingExperience.CUMULATIVE_LAYOUT_SHIFT_SCORE.percentile / 100).toFixed(2);
+      }
+    }
+
+    // Map opportunities (crucial for frontend /result page mapping)
+    const opportunities = Object.values(audits)
+      .filter(
+        (audit: any) =>
+          audit.score !== null && audit.score < 1 && audit.details?.type === 'opportunity'
+      )
+      .map((audit: any) => ({
+        title: audit.title,
+        description: audit.description,
+        score: audit.score,
+        displayValue: audit.displayValue,
+      }))
+      .slice(0, 5);
+
+    // Map diagnostics
+    const diagnostics = Object.values(audits)
+      .filter((audit: any) => audit.details?.type === 'diagnostic')
+      .map((audit: any) => ({
+        title: audit.title,
+        description: audit.description,
+        score: audit.score,
+        displayValue: audit.displayValue,
+        numericValue: audit.numericValue,
+      }))
+      .slice(0, 5);
+
+    scanStore[scanId] = {
+      status: 'done',
+      data: {
+        performance: Math.round((categories.performance?.score || 0) * 100),
+        accessibility: Math.round((categories.accessibility?.score || 0) * 100),
+        bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
+        seo: Math.round((categories.seo?.score || 0) * 100),
+        metrics: { fcp, lcp, cls, tbt },
+        opportunities,
+        diagnostics,
+        realUser: hasRealUser,
+      },
+    };
   } catch (error: unknown) {
-    console.error('API Error in /api/scan:', error);
-    if (error instanceof SyntaxError) {
-      return createErrorResponse('Invalid JSON payload.', 400);
-    }
-
-    // Check for specific error messages from service or generic Error
-    let errorMessage = 'An unexpected error occurred during the scan.';
-    let statusCode = 500;
-
-    if (error instanceof Error) {
-      errorMessage = error.message; // Use specific error message from service (e.g., timeout)
-      // If specific status codes are ever thrown by service, handle them here.
-      // For now, backend errors are treated as 500.
-    }
-
-    return createErrorResponse(errorMessage, statusCode);
+    console.error(`Background scan failed for ${scanId}:`, error);
+    scanStore[scanId] = {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
-// History update: 2026-03-08T23:00:28
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const url = body?.url;
 
-// Dev session update: 2026-03-08T23:00:53
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+      return NextResponse.json({ error: 'Valid "url" is required.' }, { status: 400 });
+    }
+
+    const scanId = crypto.randomUUID();
+    scanStore[scanId] = { status: 'pending' };
+
+    // 3. FIX: Execute immediately without await so the promise initiates.
+    // In next dev, setTimeout can cause the macro-task to hang indefinitely when the response is flushed.
+    processScanInBackground(scanId, url).catch(console.error);
+
+    return NextResponse.json({ scanId }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to start scan.' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) return NextResponse.json({ error: 'Missing "id" param.' }, { status: 400 });
+
+  const result = scanStore[id];
+  if (!result)
+    return NextResponse.json({ error: 'Scan ID not found or expired.' }, { status: 404 });
+
+  return NextResponse.json(result, { status: 200 });
+}

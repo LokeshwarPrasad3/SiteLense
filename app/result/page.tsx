@@ -1,4 +1,3 @@
-// app/result/page.tsx
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -7,35 +6,19 @@ import { usePdfExport } from '@/hooks/usePdfExport';
 import { useScan } from '@/features/scanner/hooks/useScan';
 import { SectionWrapper } from '@/components/shared/section-wrapper';
 import { Button } from '@/components/ui/button';
-import {
-  Globe,
-  Zap,
-  Activity,
-  CheckCircle2,
-  Search,
-  ExternalLink,
-  Timer,
-  Gauge,
-  Layout,
-  Lock,
-  ArrowUpRight,
-  AlertCircle,
-  Clock,
-  Download,
-  Loader2,
-} from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { GlassCard, GradientHeading } from '@/components/ui/dashboard-elements';
 
-// Import refactored components
-import ScoreCard from '@/features/scanner/components/ScoreCard';
-import ChartCard from '@/features/scanner/components/ChartCard';
-import MetricCard from '@/features/scanner/components/MetricCard';
-import OpportunityCard from '@/features/scanner/components/OpportunityCard';
+// Refactored Sections and Components
+import ModernLoader from '@/features/scanner/components/ModernLoader';
 import PdfReport from '@/features/scanner/components/PdfReport';
 import { useConfetti } from '@/hooks/useConfetti';
 
-// --- Main Page Logic ---
+// Layout sections
+import { ReportHeader } from '@/features/scanner/components/sections/ReportHeader';
+import { ReportSummaryCards } from '@/features/scanner/components/sections/ReportSummaryCards';
+import { ReportCharts } from '@/features/scanner/components/sections/ReportCharts';
+import { ReportDetails } from '@/features/scanner/components/sections/ReportDetails';
 
 function ResultContent() {
   const searchParams = useSearchParams();
@@ -45,10 +28,18 @@ function ResultContent() {
   const { data, error, isLoading, executeScan } = useScan();
   const { fireConfetti } = useConfetti();
   const resultsRef = useRef<HTMLDivElement>(null);
-  const pdfRef = useRef<HTMLDivElement>(null); // Dedicated ref for high-quality PDF export
-  const { exportToPdf, isGenerating } = usePdfExport(
-    `site-report-${url ? new URL(url).hostname : 'analysis'}.pdf`
-  );
+
+  const hostname = useMemo(() => {
+    if (!url) return null;
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return null;
+    }
+  }, [url]);
+
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const { exportToPdf, isGenerating } = usePdfExport(`site-report-${hostname || 'analysis'}.pdf`);
 
   useEffect(() => {
     if (url) {
@@ -56,135 +47,11 @@ function ResultContent() {
     }
   }, [url, executeScan]);
 
-  // Trigger confetti only once when data is loaded
   useEffect(() => {
     if (data && !isLoading && !error) {
       fireConfetti();
     }
   }, [data, isLoading, error, fireConfetti]);
-
-  const hostname = useMemo(() => {
-    if (!url) return null;
-    try {
-      return new URL(url).hostname;
-    } catch (e) {
-      return null;
-    }
-  }, [url]);
-
-  const barChartOptions = useMemo(
-    () => ({
-      chart: {
-        id: 'metrics-bar',
-        toolbar: { show: false },
-        fontFamily: 'inherit',
-        background: 'transparent',
-      },
-      xaxis: {
-        type: 'category',
-        axisBorder: { show: false },
-        axisTicks: { show: false },
-        labels: { style: { colors: '#94a3b8', fontWeight: 600 } },
-      },
-      yaxis: {
-        labels: {
-          style: { colors: '#94a3b8', fontWeight: 600 },
-          formatter: (val: number) => (val >= 1000 ? `${(val / 1000).toFixed(1)}s` : `${val}ms`),
-        },
-      },
-      grid: {
-        borderColor: '#f1f5f9',
-        strokeDashArray: 4,
-        xaxis: { lines: { show: false } },
-      },
-      colors: ['#6366f1'],
-      plotOptions: {
-        bar: {
-          columnWidth: '45%',
-          borderRadius: 8,
-          distributed: true,
-        },
-      },
-      dataLabels: { enabled: false },
-      tooltip: {
-        theme: 'light',
-        y: {
-          formatter: (val: number) => (val >= 1000 ? `${(val / 1000).toFixed(2)}s` : `${val}ms`),
-        },
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'light',
-          type: 'vertical',
-          shadeIntensity: 0.5,
-          gradientToColors: ['#a855f7'],
-          inverseColors: true,
-          opacityFrom: 0.85,
-          opacityTo: 0.85,
-          stops: [0, 100],
-        },
-      },
-    }),
-    []
-  );
-
-  const radialChartOptions = useMemo(
-    () => ({
-      chart: {
-        toolbar: { show: false },
-      },
-      plotOptions: {
-        radialBar: {
-          startAngle: -135,
-          endAngle: 135,
-          hollow: {
-            margin: 0,
-            size: '70%',
-            background: 'transparent',
-          },
-          track: {
-            background: '#f1f5f9',
-            strokeWidth: '97%',
-          },
-          dataLabels: {
-            name: {
-              show: true,
-              fontSize: '14px',
-              fontWeight: 700,
-              offsetY: -10,
-              color: '#64748b',
-            },
-            value: {
-              offsetY: 15,
-              fontSize: '42px',
-              fontWeight: 900,
-              color: '#1e293b',
-              formatter: (val: any) => val,
-            },
-          },
-        },
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'dark',
-          type: 'horizontal',
-          shadeIntensity: 0.5,
-          gradientToColors: ['#a855f7'],
-          inverseColors: true,
-          opacityFrom: 1,
-          opacityTo: 1,
-          stops: [0, 100],
-        },
-      },
-      stroke: {
-        lineCap: 'round',
-      },
-      labels: ['PERFORMANCE'],
-    }),
-    []
-  );
 
   if (!url || !hostname) {
     return (
@@ -207,17 +74,7 @@ function ResultContent() {
 
   return (
     <SectionWrapper className="pt-28 pb-20 md:pt-32">
-      {isLoading && (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            className="mb-8 size-20 rounded-3xl border-4 border-indigo-600 border-t-transparent"
-          />
-          <h2 className="text-xl font-bold text-gray-900">Measuring performance...</h2>
-          <p className="mt-2 tracking-wide text-gray-500">Analyzing {hostname}</p>
-        </div>
-      )}
+      {isLoading && <ModernLoader hostname={hostname} />}
 
       {error && (
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -244,179 +101,21 @@ function ResultContent() {
           className="space-y-12"
           ref={resultsRef}
         >
-          {/* Header Section */}
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 px-4 py-1.5 backdrop-blur-md"
-            >
-              <Globe className="size-4 text-indigo-600" />
-              <span className="text-sm font-bold text-indigo-600">{hostname}</span>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener"
-                className="ml-1 text-indigo-400 hover:text-indigo-600"
-              >
-                <ExternalLink className="size-3" />
-              </a>
-            </motion.div>
-
-            <GradientHeading className="mt-6 text-5xl md:text-6xl">
-              Analysis Results
-            </GradientHeading>
-            <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-gray-500">
-              Complete performance audit and optimization report for your digital asset.
-            </p>
-
-            {/* Download PDF Button */}
-            <div className="mt-8 flex justify-center" data-pdf-ignore="true">
-              <Button
-                onClick={() => exportToPdf(pdfRef.current)}
-                disabled={isGenerating}
-                className="group relative h-12 overflow-hidden rounded-2xl bg-linear-to-r from-indigo-600 to-purple-600 px-8 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-300 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <span className="relative flex items-center gap-2.5">
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Generating PDF…
-                    </>
-                  ) : (
-                    <>
-                      <Download className="size-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
-                      Download PDF Report
-                    </>
-                  )}
-                </span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Top Score Cards Summary */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <ScoreCard
-              title="Performance"
-              score={data.performance}
-              icon={Zap}
-              colorClass="text-emerald-500"
-            />
-            <ScoreCard title="SEO" score={data.seo} icon={Search} colorClass="text-blue-500" />
-            <ScoreCard
-              title="Accessibility"
-              score={data.accessibility}
-              icon={Layout}
-              colorClass="text-purple-500"
-            />
-            <ScoreCard
-              title="Security"
-              score={data.bestPractices}
-              icon={Lock}
-              colorClass="text-indigo-500"
-            />
-          </div>
-
-          {/* Detailed Charts Section */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <ChartCard
-              title="Performance Score"
-              type="radialBar"
-              series={[data.performance]}
-              options={radialChartOptions}
-            />
-            <ChartCard
-              title="Field Data Metrics"
-              type="bar"
-              series={[
-                {
-                  name: 'Value',
-                  data: [
-                    { x: 'LCP', y: parseFloat(data.metrics.lcp) * 1000 },
-                    { x: 'FCP', y: parseFloat(data.metrics.fcp) * 1000 },
-                    { x: 'TBT', y: parseFloat(data.metrics.tbt) },
-                    { x: 'CLS', y: parseFloat(data.metrics.cls) * 1000 },
-                  ],
-                },
-              ]}
-              options={barChartOptions}
-            />
-          </div>
-
-          {/* Metrics and Opportunities Main Grid */}
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-5">
-            {/* Left: Key Metrics */}
-            <div className="lg:col-span-2">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-black text-gray-900 underline decoration-indigo-500/30 decoration-4 underline-offset-8">
-                  Key Metrics
-                </h2>
-                <div className="text-xs font-bold text-gray-400">VITALS</div>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <MetricCard label="LCP" value={data.metrics.lcp} icon={Timer} />
-                <MetricCard label="FCP" value={data.metrics.fcp} icon={Gauge} />
-                <MetricCard label="TBT" value={data.metrics.tbt} icon={Activity} />
-                <MetricCard label="CLS" value={data.metrics.cls} icon={Layout} />
-              </div>
-
-              <GlassCard className="mt-6 bg-indigo-600 p-6 text-white dark:bg-indigo-700">
-                <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-white/20">
-                  <ArrowUpRight className="size-6" />
-                </div>
-                <h3 className="text-xl font-bold">Improve Your Score</h3>
-                <p className="mt-2 text-sm leading-relaxed text-indigo-100 opacity-90">
-                  Based on our analysis, implementing the suggested changes could improve your LCP
-                  by up to 1.4s.
-                </p>
-                <Button
-                  variant="ghost"
-                  className="mt-4 h-9 border border-white/30 text-xs font-bold transition-colors hover:bg-white hover:text-indigo-600"
-                >
-                  VIEW FULL RECOMMENDATIONS
-                </Button>
-              </GlassCard>
-            </div>
-
-            {/* Right: Opportunities */}
-            <div className="lg:col-span-3">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-black text-gray-900 underline decoration-purple-500/30 decoration-4 underline-offset-8">
-                  Optimization Opportunities
-                </h2>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600">
-                  <Clock className="size-3" /> SAVING TIME
-                </div>
-              </div>
-              {data.opportunities.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {data.opportunities.map((opp, index) => (
-                    <OpportunityCard
-                      key={index}
-                      title={opp.title}
-                      description={opp.description}
-                      displayValue={opp.displayValue}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-48 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50/30">
-                  <CheckCircle2 className="mb-2 size-8 text-emerald-500" />
-                  <p className="font-bold text-gray-400">
-                    Great job! No major opportunities found.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          <ReportHeader
+            hostname={hostname}
+            url={url}
+            onExport={() => exportToPdf(pdfRef.current)}
+            isGenerating={isGenerating}
+          />
+          <ReportSummaryCards data={data} url={url} hostname={hostname} />
+          <ReportCharts data={data} />
+          <ReportDetails data={data} />
         </motion.div>
       )}
 
-      {/* Off-screen PDF-friendly layout for high-quality capture */}
       {data && (
         <div style={{ position: 'absolute', left: '-9999px', top: '0', zIndex: -1 }}>
-          <PdfReport ref={pdfRef} data={data} hostname={hostname || ''} url={url || ''} />
+          <PdfReport ref={pdfRef} data={data} hostname={hostname} url={url} />
         </div>
       )}
     </SectionWrapper>

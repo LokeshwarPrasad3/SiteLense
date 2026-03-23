@@ -2,28 +2,26 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ScanResponse } from '@/features/scanner/types/scan.types';
 
-type ScanApiError = { message: string };
-
 export const useScan = () => {
   const [data, setData] = useState<ScanResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const isRequesting = useRef<boolean>(false); // Use ref to prevent dependency changes
+  const isRequesting = useRef<boolean>(false);
 
   const executeScan = useCallback(async (url: string) => {
-    // Prevent multiple concurrent requests
     if (isRequesting.current) {
       console.log('Request already in progress, skipping new one.');
       return;
     }
 
     setIsLoading(true);
-    isRequesting.current = true; // Set requesting flag
+    isRequesting.current = true;
     setData(null);
     setError(null);
 
     try {
-      const response = await fetch('/api/scan', {
+      // 1. Kickoff the background scan
+      const startResponse = await fetch('/api/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,24 +29,51 @@ export const useScan = () => {
         body: JSON.stringify({ url }),
       });
 
-      const result = await response.json();
+      const startResult = await startResponse.json();
 
-      if (!response.ok || !result.success) {
-        throw new Error((result as ScanApiError).message || 'An unknown error occurred.');
+      if (!startResponse.ok || !startResult.scanId) {
+        throw new Error(startResult.error || 'Initialization failed.');
       }
 
-      setData(result.data as ScanResponse);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred.');
-      }
-    } finally {
+      const scanId = startResult.scanId;
+
+      // 2. Poll for the background scan results
+      const pollServer = async () => {
+        try {
+          const pollResponse = await fetch(`/api/scan?id=${scanId}`);
+          const pollResult = await pollResponse.json();
+
+          if (!pollResponse.ok) {
+            throw new Error(pollResult.error || 'Failed to check scan status.');
+          }
+
+          if (pollResult.status === 'pending') {
+            // If still pending, poll again in 2.5 seconds
+            setTimeout(pollServer, 2500);
+          } else if (pollResult.status === 'error') {
+            setError(pollResult.error || 'Analysis failed on the server.');
+            setIsLoading(false);
+            isRequesting.current = false;
+          } else if (pollResult.status === 'done') {
+            setData(pollResult.data as ScanResponse);
+            setIsLoading(false);
+            isRequesting.current = false;
+          }
+        } catch (pollErr: any) {
+          setError(pollErr.message || 'Error occurred while checking result.');
+          setIsLoading(false);
+          isRequesting.current = false;
+        }
+      };
+
+      // Begin polling loop
+      pollServer();
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.');
       setIsLoading(false);
-      isRequesting.current = false; // Reset requesting flag
+      isRequesting.current = false;
     }
   }, []);
 
-  return { data, error, isLoading, isRequesting: isRequesting.current, executeScan }; // Expose isRequesting if needed by UI
+  return { data, error, isLoading, isRequesting: isRequesting.current, executeScan };
 };
