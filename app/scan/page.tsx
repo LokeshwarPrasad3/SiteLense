@@ -2,18 +2,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Use next/navigation for App Router
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SectionWrapper } from '@/components/shared/section-wrapper';
 import { GradientText } from '@/features/landing/components/gradient-text';
-import { ArrowRight } from 'lucide-react';
+import type { StartScanResponse } from '@/features/scanner/types/scan-api.types';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 export default function ScanPage() {
   const router = useRouter();
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // State to disable button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +25,20 @@ export default function ScanPage() {
     }
     const fullUrl = `https://${url}`;
     try {
-      new URL(fullUrl); // Basic URL validation
+      new URL(fullUrl);
       setError('');
-      setIsSubmitting(true); // Disable button while navigating
-      router.push(`/result?url=${encodeURIComponent(fullUrl)}`);
-      // Note: The API call happens on the next page load, so button remains disabled until user navigates away or returns.
+      setIsSubmitting(true);
+
+      const response = await axios.post<StartScanResponse>('/api/scan', { url: fullUrl });
+      const scanId = response.data.scanId;
+
+      router.push(`/result?url=${encodeURIComponent(fullUrl)}&id=${encodeURIComponent(scanId)}`);
     } catch (err) {
       setError('Please enter a valid URL.');
-      setIsSubmitting(false); // Re-enable if validation fails
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error ?? 'Failed to start analysis.');
+      }
+      setIsSubmitting(false);
     }
   };
 
@@ -63,17 +71,26 @@ export default function ScanPage() {
               placeholder="example.com"
               className="h-14 border-0 bg-transparent px-4 ps-1 text-lg shadow-none focus-visible:ring-0"
               required
-              disabled={isSubmitting} // Disable input while submitting
+              disabled={isSubmitting}
             />
           </div>
           <Button
             type="submit"
             size="lg"
             className="group h-14 rounded-2xl bg-indigo-600 px-8 text-base font-semibold shadow-2xl shadow-indigo-200/50 transition-all hover:bg-indigo-700 active:scale-95"
-            disabled={isSubmitting} // Disable button
+            disabled={isSubmitting}
           >
-            Analyze
-            <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Analyze
+              </>
+            ) : (
+              <>
+                Analyze
+                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+              </>
+            )}
           </Button>
         </form>
         {error && <p className="mt-2 text-sm text-red-500">{error}</p>}

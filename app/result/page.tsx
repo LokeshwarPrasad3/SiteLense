@@ -24,10 +24,12 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const url = searchParams.get('url');
+  const initialScanId = searchParams.get('id');
 
-  const { data, error, isLoading, executeScan } = useScan();
+  const { data, error, isLoading, executeScan, scanId } = useScan(initialScanId);
   const { fireConfetti } = useConfetti();
   const resultsRef = useRef<HTMLDivElement>(null);
+  const showLoader = isLoading && !data && !error;
 
   const hostname = useMemo(() => {
     if (!url) return null;
@@ -44,11 +46,11 @@ function ResultContent() {
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    if (url && !hasTriggered.current) {
+    if (url && !scanId && !hasTriggered.current) {
       executeScan(url);
       hasTriggered.current = true;
     }
-  }, [url, executeScan]);
+  }, [url, scanId, executeScan]);
 
   useEffect(() => {
     if (data && !isLoading && !error) {
@@ -77,7 +79,7 @@ function ResultContent() {
 
   return (
     <SectionWrapper className="pt-28 pb-20 md:pt-32">
-      {isLoading && <ModernLoader hostname={hostname} />}
+      {showLoader && <ModernLoader hostname={hostname} />}
 
       {error && (
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -86,13 +88,22 @@ function ResultContent() {
           </div>
           <h1 className="mb-2 text-3xl font-black text-gray-900">Analysis Failed</h1>
           <p className="mb-10 max-w-md text-gray-500">{error}</p>
-          <Button
-            onClick={() => executeScan(url)}
-            variant="outline"
-            className="h-12 rounded-xl border-gray-200 px-8 transition-colors hover:bg-gray-50"
-          >
-            Retry analysis
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              onClick={() => router.push('/scan')}
+              variant="outline"
+              className="h-12 rounded-xl border-gray-200 px-8 transition-colors hover:bg-gray-50"
+            >
+              Scan Other Website
+            </Button>
+            <Button
+              onClick={() => executeScan(url)}
+              variant="outline"
+              className="h-12 rounded-xl border-gray-200 px-8 transition-colors hover:bg-gray-50"
+            >
+              Retry analysis
+            </Button>
+          </div>
         </div>
       )}
 
@@ -109,6 +120,7 @@ function ResultContent() {
             url={url}
             onExport={() => exportToPdf(pdfRef.current)}
             isGenerating={isGenerating}
+            onScanOther={() => router.push('/scan')}
           />
           <ReportSummaryCards data={data} url={url} hostname={hostname} />
           <ReportCharts data={data} />

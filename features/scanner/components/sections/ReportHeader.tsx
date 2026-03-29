@@ -1,4 +1,4 @@
-import { Globe, Download, Loader2, ExternalLink } from 'lucide-react';
+import { Globe, Download, Loader2, ExternalLink, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GradientHeading } from '@/components/ui/dashboard-elements';
 import { motion } from 'framer-motion';
@@ -8,9 +8,16 @@ interface ReportHeaderProps {
   url: string;
   onExport: () => void;
   isGenerating: boolean;
+  onScanOther: () => void;
 }
 
-export function ReportHeader({ hostname, url, onExport, isGenerating }: ReportHeaderProps) {
+export function ReportHeader({
+  hostname,
+  url,
+  onExport,
+  isGenerating,
+  onScanOther,
+}: ReportHeaderProps) {
   return (
     <div className="text-center">
       <motion.div
@@ -37,7 +44,17 @@ export function ReportHeader({ hostname, url, onExport, isGenerating }: ReportHe
       </p>
 
       {/* Download PDF Button */}
-      <div className="mt-8 flex justify-center" data-pdf-ignore="true">
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row" data-pdf-ignore="true">
+        <Button
+          onClick={onScanOther}
+          variant="outline"
+          className="h-12 rounded-2xl border-gray-200 px-8 text-sm font-bold text-gray-700 transition-all duration-300 hover:scale-[1.02] hover:bg-gray-50"
+        >
+          <span className="relative flex items-center gap-2.5">
+            <RotateCcw className="size-4 transition-transform duration-300 group-hover/button:-rotate-45" />
+            Scan Other Website
+          </span>
+        </Button>
         <Button
           onClick={onExport}
           disabled={isGenerating}

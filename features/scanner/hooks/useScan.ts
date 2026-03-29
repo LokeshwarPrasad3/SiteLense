@@ -5,8 +5,8 @@ import type { ScanQueryResponse, StartScanResponse } from '@/features/scanner/ty
 
 const DEFAULT_POLL_INTERVAL_MS = 4000;
 
-export const useScan = () => {
-  const [scanId, setScanId] = useState<string | null>(null);
+export const useScan = (initialScanId: string | null = null) => {
+  const [scanId, setScanId] = useState<string | null>(initialScanId);
 
   const startScanMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -57,7 +57,12 @@ export const useScan = () => {
     scanQuery.error?.message ||
     null;
 
-  const isLoading = startScanMutation.isPending || scanQuery.data?.status === 'pending';
+  const hasTerminalResponse =
+    scanQuery.data?.status === 'done' || scanQuery.data?.status === 'error';
+  const isLoading =
+    !hasTerminalResponse &&
+    (startScanMutation.isPending ||
+      (!!scanId && (scanQuery.fetchStatus === 'fetching' || scanQuery.data?.status === 'pending')));
   const scanData = scanQuery.data?.status === 'done' ? scanQuery.data.data : null;
 
   return {
