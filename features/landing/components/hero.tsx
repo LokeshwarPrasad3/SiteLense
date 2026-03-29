@@ -15,6 +15,7 @@ import {
 import { SectionWrapper } from '@/components/shared/section-wrapper';
 import { GradientText } from '@/features/landing/components/gradient-text';
 import { fadeIn, scaleIn } from '@/utils/animations';
+import { startRouteProgress } from '@/lib/route-progress';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -68,7 +69,10 @@ export function Hero() {
           <motion.div variants={fadeIn('right', 0.4)} className="flex flex-wrap gap-4">
             <Button
               size="lg"
-              onClick={() => router.push('/scan')}
+              onClick={() => {
+                startRouteProgress();
+                router.push('/scan');
+              }}
               className="group h-14 rounded-2xl bg-indigo-600 px-8 text-base font-semibold shadow-2xl shadow-indigo-200/50 transition-all hover:bg-indigo-700 active:scale-95"
             >
               Scan Now

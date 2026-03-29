@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { fadeIn } from '@/utils/animations';
+import { startRouteProgress } from '@/lib/route-progress';
 
 export function CTA() {
   const router = useRouter();
@@ -43,7 +44,10 @@ export function CTA() {
         <motion.div variants={fadeIn('up', 0.4)} className="flex flex-col gap-4 pt-4 sm:flex-row">
           <Button
             size="lg"
-            onClick={() => router.push('/scan')}
+            onClick={() => {
+              startRouteProgress();
+              router.push('/scan');
+            }}
             className="h-14 rounded-2xl bg-white px-10 text-lg font-bold text-indigo-600 shadow-xl transition-all hover:scale-105 hover:bg-gray-50"
           >
             Get Started

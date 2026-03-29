@@ -1,9 +1,11 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import '../styles/globals.css'; // Assuming this is the global CSS file
 import { Overpass } from 'next/font/google'; // Assuming Inter font is used
 import Providers from '@/app/providers';
 import { Navbar } from '@/components/layouts/navbar';
+import { RouteProgressBar } from '@/components/shared/route-progress-bar';
 
 const overpass = Overpass({
   variable: '--font-overpass',
@@ -45,6 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={overpass.className}>
         <Providers>
+          <Suspense fallback={null}>
+            <RouteProgressBar />
+          </Suspense>
           <Navbar />
           {children}
         </Providers>

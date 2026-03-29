@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Check, Zap, Rocket, Building } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { fadeIn } from '@/utils/animations';
+import { startRouteProgress } from '@/lib/route-progress';
 
 export function Pricing() {
   const router = useRouter();
@@ -131,6 +132,7 @@ export function Pricing() {
                 <Button
                   onClick={() => {
                     if (plan.cta !== 'Contact Sales') {
+                      startRouteProgress();
                       router.push('/scan');
                     }
                   }}

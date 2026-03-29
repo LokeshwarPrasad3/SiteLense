@@ -10,6 +10,7 @@ import { SectionWrapper } from '@/components/shared/section-wrapper';
 import { GradientText } from '@/features/landing/components/gradient-text';
 import type { StartScanResponse } from '@/features/scanner/types/scan-api.types';
 import { ArrowRight, Loader2 } from 'lucide-react';
+import { startRouteProgress } from '@/lib/route-progress';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function ScanPage() {
       const response = await axios.post<StartScanResponse>('/api/scan', { url: fullUrl });
       const scanId = response.data.scanId;
 
+      startRouteProgress();
       router.push(`/result?url=${encodeURIComponent(fullUrl)}&id=${encodeURIComponent(scanId)}`);
     } catch (err) {
       setError('Please enter a valid URL.');

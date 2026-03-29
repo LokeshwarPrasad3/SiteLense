@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import ModernLoader from '@/features/scanner/components/ModernLoader';
 import PdfReport from '@/features/scanner/components/PdfReport';
 import { useConfetti } from '@/hooks/useConfetti';
+import { startRouteProgress } from '@/lib/route-progress';
 
 // Layout sections
 import { ReportHeader } from '@/features/scanner/components/sections/ReportHeader';
@@ -66,7 +67,10 @@ function ResultContent() {
           <h1 className="mb-2 text-3xl font-black text-gray-900">Invalid Request</h1>
           <p className="text-lg text-gray-500">No valid URL was provided for scanning.</p>
           <Button
-            onClick={() => router.push('/')}
+            onClick={() => {
+              startRouteProgress();
+              router.push('/');
+            }}
             variant="default"
             className="mt-8 h-12 rounded-xl px-10 shadow-lg shadow-indigo-200"
           >
@@ -90,7 +94,10 @@ function ResultContent() {
           <p className="mb-10 max-w-md text-gray-500">{error}</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
-              onClick={() => router.push('/scan')}
+              onClick={() => {
+                startRouteProgress();
+                router.push('/scan');
+              }}
               variant="outline"
               className="h-12 rounded-xl border-gray-200 px-8 transition-colors hover:bg-gray-50"
             >
@@ -120,7 +127,10 @@ function ResultContent() {
             url={url}
             onExport={() => exportToPdf(pdfRef.current)}
             isGenerating={isGenerating}
-            onScanOther={() => router.push('/scan')}
+            onScanOther={() => {
+              startRouteProgress();
+              router.push('/scan');
+            }}
           />
           <ReportSummaryCards data={data} url={url} hostname={hostname} />
           <ReportCharts data={data} />
