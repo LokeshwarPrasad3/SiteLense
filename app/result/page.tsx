@@ -41,9 +41,12 @@ function ResultContent() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const { exportToPdf, isGenerating } = usePdfExport(`site-report-${hostname || 'analysis'}.pdf`);
 
+  const hasTriggered = useRef(false);
+
   useEffect(() => {
-    if (url) {
+    if (url && !hasTriggered.current) {
       executeScan(url);
+      hasTriggered.current = true;
     }
   }, [url, executeScan]);
 

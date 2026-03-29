@@ -26,4 +26,5 @@ export type ScanResponse = {
   metrics: Metric;
   opportunities: AuditItem[]; // Mapped from PSI audits with 'opportunity' type details
   diagnostics: AuditItem[]; // Mapped from PSI audits with 'diagnostic' type details
+  realUser?: boolean;
 };

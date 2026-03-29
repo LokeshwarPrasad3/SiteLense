@@ -12,9 +12,12 @@ export function ReportSummaryCards({
   hostname: string;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-      <WebsitePreview url={url} hostname={hostname} />
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2">
+    <div className="flex flex-col gap-10">
+      <div className="w-full">
+        <WebsitePreview url={url} hostname={hostname} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <ScoreCard
           title="Performance"
           score={data.performance}

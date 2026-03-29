@@ -1,79 +1,72 @@
-// hooks/useScan.ts
-import { useState, useCallback, useRef } from 'react';
-import type { ScanResponse } from '@/features/scanner/types/scan.types';
+import { useState, useCallback } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import type { ScanQueryResponse, StartScanResponse } from '@/features/scanner/types/scan-api.types';
+
+const DEFAULT_POLL_INTERVAL_MS = 4000;
 
 export const useScan = () => {
-  const [data, setData] = useState<ScanResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const isRequesting = useRef<boolean>(false);
+  const [scanId, setScanId] = useState<string | null>(null);
 
-  const executeScan = useCallback(async (url: string) => {
-    if (isRequesting.current) {
-      console.log('Request already in progress, skipping new one.');
-      return;
-    }
+  const startScanMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await axios.post<StartScanResponse>('/api/scan', { url });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setScanId(data.scanId);
+    },
+  });
 
-    setIsLoading(true);
-    isRequesting.current = true;
-    setData(null);
-    setError(null);
+  const scanQuery = useQuery({
+    queryKey: ['scan', scanId],
+    queryFn: async () => {
+      const response = await axios.get<ScanQueryResponse>(`/api/scan?id=${scanId}`);
+      return response.data;
+    },
+    enabled: !!scanId,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data?.status === 'pending' ? (data.nextPollMs ?? DEFAULT_POLL_INTERVAL_MS) : false;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: true,
+    retry: 1,
+    staleTime: 0,
+  });
 
-    try {
-      // 1. Kickoff the background scan
-      const startResponse = await fetch('/api/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      const startResult = await startResponse.json();
-
-      if (!startResponse.ok || !startResult.scanId) {
-        throw new Error(startResult.error || 'Initialization failed.');
+  const executeScan = useCallback(
+    (url: string) => {
+      if (startScanMutation.isPending || scanQuery.data?.status === 'pending') {
+        return;
       }
 
-      const scanId = startResult.scanId;
+      setScanId(null);
+      startScanMutation.reset();
+      startScanMutation.mutate(url);
+    },
+    [scanQuery, startScanMutation]
+  );
 
-      // 2. Poll for the background scan results
-      const pollServer = async () => {
-        try {
-          const pollResponse = await fetch(`/api/scan?id=${scanId}`);
-          const pollResult = await pollResponse.json();
+  const error =
+    (startScanMutation.error as any)?.response?.data?.error ||
+    startScanMutation.error?.message ||
+    (scanQuery.data?.status === 'error' ? scanQuery.data.error : null) ||
+    (scanQuery.error as any)?.response?.data?.error ||
+    scanQuery.error?.message ||
+    null;
 
-          if (!pollResponse.ok) {
-            throw new Error(pollResult.error || 'Failed to check scan status.');
-          }
+  const isLoading = startScanMutation.isPending || scanQuery.data?.status === 'pending';
+  const scanData = scanQuery.data?.status === 'done' ? scanQuery.data.data : null;
 
-          if (pollResult.status === 'pending') {
-            // If still pending, poll again in 2.5 seconds
-            setTimeout(pollServer, 2500);
-          } else if (pollResult.status === 'error') {
-            setError(pollResult.error || 'Analysis failed on the server.');
-            setIsLoading(false);
-            isRequesting.current = false;
-          } else if (pollResult.status === 'done') {
-            setData(pollResult.data as ScanResponse);
-            setIsLoading(false);
-            isRequesting.current = false;
-          }
-        } catch (pollErr: any) {
-          setError(pollErr.message || 'Error occurred while checking result.');
-          setIsLoading(false);
-          isRequesting.current = false;
-        }
-      };
-
-      // Begin polling loop
-      pollServer();
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
-      setIsLoading(false);
-      isRequesting.current = false;
-    }
-  }, []);
-
-  return { data, error, isLoading, isRequesting: isRequesting.current, executeScan };
+  return {
+    data: scanData,
+    error,
+    isLoading,
+    executeScan,
+    isPending: startScanMutation.isPending,
+    scanId,
+    pollCount: scanQuery.data?.status === 'pending' ? scanQuery.data.pollCount : 0,
+  };
 };
