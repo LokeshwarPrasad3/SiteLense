@@ -2,7 +2,7 @@ import type { ScanResponse } from '@/features/scanner/types/scan.types';
 
 const PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 const SCAN_CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'] as const;
-const PAGESPEED_TIMEOUT_MS = 45 * 1000;
+const PAGESPEED_TIMEOUT_MS = 90 * 1000;
 
 function buildPageSpeedUrl(url: string) {
   const params = new URLSearchParams({ url, strategy: 'mobile' });

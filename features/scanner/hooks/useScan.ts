@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import type { ScanQueryResponse, StartScanResponse } from '@/features/scanner/types/scan-api.types';
 
-const DEFAULT_POLL_INTERVAL_MS = 4000;
+const DEFAULT_POLL_INTERVAL_MS = 5000;
 
 export const useScan = (initialScanId: string | null = null) => {
   const [scanId, setScanId] = useState<string | null>(initialScanId);
@@ -32,7 +32,7 @@ export const useScan = (initialScanId: string | null = null) => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: true,
-    retry: 1,
+    retry: 3,
     staleTime: 0,
   });
 

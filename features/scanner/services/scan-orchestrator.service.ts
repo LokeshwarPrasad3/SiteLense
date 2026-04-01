@@ -12,8 +12,8 @@ import {
 
 const SCAN_RESULT_TTL_MS = 10 * 60 * 1000;
 const SCAN_ERROR_TTL_MS = 3 * 60 * 1000;
-const SCAN_PENDING_TIMEOUT_MS = 90 * 1000;
-const DEFAULT_POLL_INTERVAL_MS = 4000;
+const SCAN_PENDING_TIMEOUT_MS = 120 * 1000;
+const DEFAULT_POLL_INTERVAL_MS = 5000;
 
 function normalizeUrl(input: string) {
   const parsed = new URL(input);
