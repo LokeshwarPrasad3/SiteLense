@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getScanJob,
   getScanPollIntervalMs,
@@ -6,7 +6,6 @@ import {
 } from '@/features/scanner/services/scan-orchestrator.service';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,18 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Valid "url" is required.' }, { status: 400 });
     }
 
-    const { payload, scanPromise } = startScanJob(body.url);
-
-    if (scanPromise) {
-      after(async () => {
-        try {
-          await scanPromise;
-        } catch (err) {
-          console.error('Background scan error:', err);
-        }
-      });
-    }
-
+    const payload = startScanJob(body.url);
     return NextResponse.json(payload, {
       status: 202,
       headers: { 'Cache-Control': 'no-store, max-age=0' },

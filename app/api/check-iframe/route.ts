@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkIframeSupport } from '@/features/scanner/services/iframe.service';
 
-export const runtime = 'nodejs';
-export const maxDuration = 60;
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');

@@ -10,8 +10,6 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Nextjs('site-checker', {
-      timeout: '60 seconds',
-    });
+    new sst.aws.Nextjs('MyWeb');
   },
 });
